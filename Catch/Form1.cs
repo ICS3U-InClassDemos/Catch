@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics.Eventing.Reader;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -22,14 +23,18 @@ namespace Catch
 
         //List of balls
         List<Rectangle> ballList = new List<Rectangle>();
+        List<int> ballSpeeds = new List<int>();
+        List<string> ballColours = new List<string>();
 
         int score = 0;
-        int time = 100;
+        int time = 500;
 
         bool leftPressed = false;
         bool rightPressed = false;
 
         SolidBrush greenBrush = new SolidBrush(Color.Green);
+        SolidBrush yellowBrush = new SolidBrush(Color.Yellow);
+        SolidBrush redBrush = new SolidBrush(Color.Red);
         SolidBrush whiteBrush = new SolidBrush(Color.White);
 
         Random randGen = new Random();
@@ -40,12 +45,6 @@ namespace Catch
         public Form1()
         {
             InitializeComponent();
-            Rectangle newBall = new Rectangle(100, 0, 10, 10);
-            ballList.Add(newBall);
-
-            newBall = new Rectangle(200, 0, 10, 10);
-            ballList.Add(newBall);
-
         }
 
         private void Form1_KeyDown(object sender, KeyEventArgs e)
@@ -92,26 +91,46 @@ namespace Catch
             //move the balls down the screen
             for (int i = 0; i < ballList.Count; i++)
             {
-                int y = ballList[i].Y + ballSpeed;
+                int y = ballList[i].Y + ballSpeeds[i];
                 ballList[i] = new Rectangle(ballList[i].X, y, ballList[i].Width, ballList[i].Height);
             }
 
             //check to see if a new ball should be created
             randValue = randGen.Next(1, 40);
 
-            if (randValue < 99)
+            if (randValue < 5)
             {
                 int x = randGen.Next(50, this.Width - 50);
                 Rectangle newBall = new Rectangle(x, 0, 10, 10);
                 ballList.Add(newBall);
+                ballSpeeds.Add(randGen.Next(2, 7));
+                ballColours.Add("green");
+            }
+            else if (randValue < 10)
+            {
+                int x = randGen.Next(50, this.Width - 50);
+                Rectangle newBall = new Rectangle(x, 0, 10, 10);
+                ballList.Add(newBall);
+                ballSpeeds.Add(randGen.Next(2, 7));
+                ballColours.Add("yellow");
+            }
+            else if (randValue < 20)
+            {
+                int x = randGen.Next(50, this.Width - 50);
+                Rectangle newBall = new Rectangle(x, 0, 10, 10);
+                ballList.Add(newBall);
+                ballSpeeds.Add(randGen.Next(2, 7));
+                ballColours.Add("red");
             }
 
             //remove any balls that are no longer on screen
             for (int i = 0; i < ballList.Count; i++)
             {
-                if (ballList[i].Y > this.Height - groundHeight)
+                if (ballList[i].Y > this.Height - groundHeight - ballSize)
                 {
-                    ballList.Remove(ballList[i]);
+                    ballList.RemoveAt(i);
+                    ballSpeeds.RemoveAt(i);
+                    ballColours.RemoveAt(i);
                 }
             }
 
@@ -120,8 +139,24 @@ namespace Catch
             {
                 if (hero.IntersectsWith(ballList[i]))
                 {
-                    ballList.Remove(ballList[i]);
-                    score += 10;
+                    if (ballColours[i] == "green")
+                    {
+                        score += 20;
+                    }
+                    else if (ballColours[i] == "yellow")
+                    {
+                        time += 20;
+                    }
+                    else
+                    {
+                        score -= 20;
+                    }
+
+                    ballList.RemoveAt(i);
+                    ballSpeeds.RemoveAt(i);
+                    ballColours.RemoveAt(i);
+
+
                 }
             }
 
@@ -153,7 +188,18 @@ namespace Catch
             //draw balls
             for (int i = 0; i < ballList.Count; i++)
             {
-                e.Graphics.FillEllipse(greenBrush, ballList[i]);
+                if (ballColours[i] == "green")
+                {
+                    e.Graphics.FillEllipse(greenBrush, ballList[i]);
+                }
+                else if (ballColours[i] == "yellow")
+                {
+                    e.Graphics.FillEllipse(yellowBrush, ballList[i]);
+                }
+                else
+                {
+                    e.Graphics.FillEllipse(redBrush, ballList[i]);
+                }
             }
         }
 
